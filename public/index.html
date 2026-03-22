@@ -3,52 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI足球预测系统</title>
+<title>AI足球预测</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-4">
+<body class="bg-gray-900 text-white p-4">
 <div class="max-w-md mx-auto">
   <h1 class="text-2xl font-bold text-center mb-6">
     <i class="fas fa-futbol text-cyan-400"></i> AI足球预测
   </h1>
 
-  <div class="space-y-4">
-    <input type="text" id="home" placeholder="主队（如：曼城）" class="w-full p-3 bg-gray-800 rounded-lg border border-gray-700">
-    <input type="text" id="away" placeholder="客队（如：利物浦）" class="w-full p-3 bg-gray-800 rounded-lg border border-gray-700">
-    <button onclick="go()" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 rounded-lg font-bold">开始预测</button>
+  <div class="space-y-3">
+    <input type="text" id="home" placeholder="主队（例如：曼城）"
+      class="w-full p-3 bg-gray-800 border border-gray-700 rounded">
+    <input type="text" id="away" placeholder="客队（例如：阿森纳）"
+      class="w-full p-3 bg-gray-800 border border-gray-700 rounded">
+    <button onclick="predict()"
+      class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 rounded font-bold">
+      开始预测
+    </button>
   </div>
 
-  <div id="result" class="mt-6 hidden">
-    <div class="bg-gray-800 p-4 rounded-lg">
-      <h2 id="title" class="text-xl font-bold mb-2"></h2>
-      <p id="win"></p>
-      <p id="score"></p>
-      <p id="xg"></p>
-      <p id="kelly"></p>
+  <div id="res" class="mt-6 hidden">
+    <div class="bg-gray-800 p-4 rounded">
+      <h3 class="font-bold mb-2" id="m"></h3>
+      <p id="w"></p>
+      <p id="s"></p>
+      <p id="x"></p>
+      <p id="k"></p>
     </div>
   </div>
 </div>
 
 <script>
-async function go() {
-  const home = document.getElementById('home').value;
-  const away = document.getElementById('away').value;
-  if (!home || !away) return alert('请输入队伍');
+async function predict() {
+  const h = document.getElementById('home').value.trim();
+  const a = document.getElementById('away').value.trim();
 
-  document.getElementById('result').classList.add('hidden');
-  const res = await fetch(`/api/predict?home=${home}&away=${away}`);
-  const data = await res.json();
+  if (!h || !a) return alert("请输入主队与客队");
 
-  if (data.success) {
-    document.getElementById('title').textContent = `${home} vs ${away}`;
-    document.getElementById('win').textContent = `胜率：主胜 ${data.prediction.win_probability.home}% / 平局 ${data.prediction.win_probability.draw}% / 客胜 ${data.prediction.win_probability.away}%`;
-    document.getElementById('score').textContent = '预测比分：' + data.prediction.suggested_score;
-    document.getElementById('xg').textContent = '预期进球：' + data.prediction.expected_goals.home + ' - ' + data.prediction.expected_goals.away;
-    document.getElementById('kelly').textContent = '凯利建议：' + data.prediction.kelly_criterion.recommended_bet;
-    document.getElementById('result').classList.remove('hidden');
+  const r = await fetch(`/api/predict?home=${h}&away=${a}`);
+  const d = await r.json();
+
+  if (d.success) {
+    document.getElementById('m').innerText = `${h} vs ${a}`;
+    document.getElementById('w').innerText =
+      `胜率：主胜 ${d.prediction.win_probability.home}% / 平局 ${d.prediction.win_probability.draw}% / 客胜 ${d.prediction.win_probability.away}%`;
+    document.getElementById('s').innerText = "预测比分：" + d.prediction.suggested_score;
+    document.getElementById('x').innerText = "预期进球：" + d.prediction.expected_goals.home + " - " + d.prediction.expected_goals.away;
+    document.getElementById('k').innerText = "凯利建议：" + d.prediction.kelly_criterion.recommended_bet;
+    document.getElementById('res').classList.remove('hidden');
   } else {
-    alert('错误：' + data.error);
+    alert("错误：" + d.error);
   }
 }
 </script>
