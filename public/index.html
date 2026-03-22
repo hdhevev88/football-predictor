@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI足球预测系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: '#06b6d4',
+        secondary: '#f59e0b',
+        dark: '#0f172a',
+      },
+    }
+  }
+}
+</script>
+<style type="text/tailwindcss">
+@layer utilities {
+  .card-gradient {
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+  }
+  .glow {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
+  }
+}
+</style>
+</head>
+<body class="bg-dark text-white min-h-screen p-4 md:p-8">
+<div class="max-w-md mx-auto">
+  <h1 class="text-3xl font-bold text-center mb-2 mt-4">
+    <i class="fas fa-futbol text-primary"></i> AI 足球预测
+  </h1>
+  <p class="text-center text-gray-400 mb-8">专业赛事数据分析 · 智能胜率预测</p>
+
+  <div class="space-y-4">
+    <div class="relative">
+      <i class="fas fa-home absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+      <input type="text" id="homeTeam" placeholder="主队（如：曼城）"
+        class="w-full p-3 pl-10 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition">
+    </div>
+    <div class="relative">
+      <i class="fas fa-plane-departure absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+      <input type="text" id="awayTeam" placeholder="客队（如：利物浦）"
+        class="w-full p-3 pl-10 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition">
+    </div>
+    <div class="relative">
+      <i class="fas fa-cogs absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+      <select id="modelType"
+        class="w-full p-3 pl-10 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary/50 transition appearance-none">
+        <option value="xgboost">XGBoost 集成模型</option>
+        <option value="lstm">LSTM 时序模型</option>
+        <option value="ensemble">综合胜率模型</option>
+      </select>
+      <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"></i>
+    </div>
+    <button onclick="getPrediction()"
+      class="w-full py-3 bg-primary hover:bg-primary/90 rounded-lg font-bold transition transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 glow">
+      <i class="fas fa-chart-line"></i>
+      <span>开始 AI 预测分析</span>
+    </button>
+  </div>
+
+  <div id="loading" class="mt-8 hidden">
+    <div class="flex justify-center">
+      <div class="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+    </div>
+    <p class="text-center mt-4 text-gray-400">正在分析赛事数据...</p>
+  </div>
+
+  <div id="result" class="mt-8 hidden space-y-6">
+    <div class="card-gradient p-5 rounded-xl border border-gray-700">
+      <div class="flex justify-between items-center mb-4">
+        <span class="text-sm text-gray-400">预测模型</span>
+        <span class="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm" id="modelTag"></span>
+      </div>
+      <div class="flex justify-between items-center gap-4">
+        <div class="flex-1 text-center">
+          <h2 id="homeName" class="text-xl font-bold"></h2>
+          <p id="homeWin" class="text-3xl font-bold text-primary"></p>
+          <p class="text-sm text-gray-400">胜率</p>
+        </div>
+        <div class="text-gray-500 font-bold">VS</div>
+        <div class="flex-1 text-center">
+          <h2 id="awayName" class="text-xl font-bold"></h2>
+          <p id="awayWin" class="text-3xl font-bold text-secondary"></p>
+          <p class="text-sm text-gray-400">胜率</p>
+        </div>
+      </div>
+      <div class="mt-4 pt-4 border-t border-gray-700">
+        <div class="flex justify-between text-sm text-gray-300">
+          <span>平局概率: <span id="drawProb" class="text-white"></span></span>
+          <span>信心指数: <span id="confidence" class="text-white"></span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-gradient p-5 rounded-xl border border-gray-700">
+      <h3 class="font-bold mb-4 flex items-center gap-2">
+        <i class="fas fa-chart-bar text-primary"></i> 详细数据分析
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <div class="flex justify-between text-sm mb-1">
+            <span>预期进球 (xG)</span>
+            <span id="xgScore" class="text-primary"></span>
+          </div>
+          <div class="w-full bg-gray-700 rounded-full h-2">
+            <div class="bg-gradient-to-r from-primary to-secondary h-2 rounded-full" id="xgBar"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-1">
+            <span>比分预测</span>
+            <span id="scorePred" class="text-white"></span>
+          </div>
+        </div>
+        <div>
+          <div class="flex justi
